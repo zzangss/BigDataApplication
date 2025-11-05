@@ -12,7 +12,7 @@
 -- 
 USE team13;
 
-
+/*
 -- 2. 테이블 삭제
 -- 스크립트를 반복 실행할 수 있도록 기존 테이블 삭제
 DROP TABLE IF EXISTS Comments;
@@ -23,7 +23,7 @@ DROP TABLE IF EXISTS Menus;
 DROP TABLE IF EXISTS Categories;
 DROP TABLE IF EXISTS WeatherLog;
 DROP TABLE IF EXISTS WeatherConditions;
-
+*/
 
 -- 3. 테이블 생성
 
