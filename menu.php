@@ -84,9 +84,6 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
         .review-button:hover {
             background-color: #45a049;
         }
-        /* --- 필터 바 끝 --- */
-
-        /* --- 리뷰 목록 스타일 --- */
         .review-list-item {
             display: flex;
             background: white;

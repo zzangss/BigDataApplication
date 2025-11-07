@@ -29,7 +29,7 @@
         <nav class="nav-links">
             <a href="menu.php">메뉴리뷰</a>
             <a href="analysis.php">분석하기</a>
-            <a href="index.php" class="login-btn">로그인</a>
+            <a href="login.php" class="login-btn">로그인</a>
         </nav>
     </header>
     <h2>오늘 뭐먹지? 회원가입</h2>
