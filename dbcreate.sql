@@ -63,6 +63,7 @@ CREATE TABLE Menus (
     menu_id INT NOT NULL AUTO_INCREMENT,
     category_id INT NOT NULL,
     menu_name VARCHAR(100) NOT NULL COMMENT '예: 제육볶음',
+    food_image_url VARCHAR(1024) NULL COMMENT '음식 이미지 경로 (URL 또는 파일 경로)',
     PRIMARY KEY (menu_id),
     INDEX idx_category (category_id),
     CONSTRAINT fk_menu_category
