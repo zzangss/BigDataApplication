@@ -29,10 +29,11 @@ if ($result->num_rows > 0) {
         echo "DB Path: <code>" . $image_path . "</code><br>";
 
         // <img> 태그로 이미지 로드 시도
-        echo "<img src='" . $image_path . "' 
-                   alt='" . $menu_name . "' 
-                   width='150' 
-                   title='" . $menu_name . "'>";
+        echo "<img src='/how2React/BigDataApplication/" . $image_path . "' 
+           alt='" . $menu_name . "' 
+           width='150' 
+           title='" . $menu_name . "'>";
+
 
         echo "</div>";
     }

@@ -1,0 +1,50 @@
+<?php
+
+// db 연결
+require_once __DIR__ . '/db.php';
+
+// 별점 상위 5개 고르는 sql문 (rating이 1개 이상 )
+$sql = "SELECT m.menu_id, m.menu_name, c.category_name, m.food_image_url, 
+                ROUND(AVG(r.taste_rating),1) AS rating,
+                COUNT(r.review_id) AS review_count
+        FROM Menus AS m
+            JOIN Categories AS c ON c.category_id = m.category_id
+            LEFT JOIN Reviews AS r ON r.menu_id = m.menu_id
+        GROUP BY m.menu_id
+        HAVING review_count >= 1
+        ORDER BY rating DESC, review_count DESC, m.menu_id ASC
+        LIMIT 5;";
+$res = $conn -> query($sql);
+
+echo '<div class="menu-container">';
+
+if ($res -> num_rows > 0){
+    while($row = $res-> fetch_assoc()){
+        $menu_name = htmlspecialchars($row['menu_name'] ?? '', ENT_QUOTES);
+        $rating    = htmlspecialchars($row['rating'] ?? '', ENT_QUOTES);
+        $category  = htmlspecialchars($row['category_name'] ?? '', ENT_QUOTES);
+        $image_rel = htmlspecialchars($row['food_image_url'] ?? '', ENT_QUOTES);
+        $img_src = '/how2React/BigDataApplication/' . ltrim($image_rel, '/');
+
+        echo '
+      <div class="menu-item">
+        <div class="menu-image">
+          <img src="' . $img_src . '" alt="' . $menu_name . '" title="' . $menu_name . '">
+        </div>
+        <div class="menu-info">
+          <p><strong>' . $menu_name . '</strong></p>
+          <p>⭐ ' . $rating . '점 (' . (int)$row['review_count'] . '명)</p>
+          <p>' . $category . '</p>
+        </div>
+      </div>
+    ';
+  }
+}
+
+else {
+  echo '<p>리뷰가 있는 메뉴가 없습니다.</p>';
+}
+
+echo '</div>';
+
+$conn->close();

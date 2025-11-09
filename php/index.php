@@ -98,42 +98,40 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
             color: #333;
             margin-bottom: 25px;
         }
-        .menu-list {
-            display: flex;
-            justify-content: space-between; /* 5개 항목 균등 배분 */
-            gap: 20px; /* 항목 사이 간격 */
-        }
-        .menu-item {
-            flex: 1; /* 1:1:1:1:1 비율 */
-            min-width: 0; /* 좁아질 때를 대비 */
-            background: #ffffff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            text-align: left;
-            overflow: hidden; /* 이미지 모서리 둥글게 */
-        }
-        .menu-image {
-            height: 150px;
-            background-color: #f0f0f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #aaa;
-            font-size: 16px;
-        }
-        .menu-info {
-            padding: 15px;
-        }
-        .menu-info p {
-            margin: 5px 0;
-            font-size: 15px;
-            line-height: 1.4;
-        }
-        .menu-info p strong {
-            font-size: 16px;
-            color: #000;
-        }
+
+        .menu-container {
+    display: flex;            /* 가로 정렬의 핵심 */
+    flex-wrap: nowrap;        /* 줄바꿈 안 함 (한 줄에 5개 고정) */
+    justify-content: center;  /* 가운데 정렬 */
+    gap: 20px;                /* 카드 사이 간격 */
+    margin-top: 20px;
+  }
+
+  .menu-item {
+    width: 200px;             /* 카드 너비 */
+    border: 1px solid #ccc;
+    border-radius: 12px;
+    background: #fafafa;
+    text-align: center;
+    padding: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+  }
+
+  .menu-item:hover {
+    transform: translateY(-5px);
+  }
+
+  .menu-image img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .menu-info p {
+    margin: 5px 0;
+  }
         
     </style>
 </head>
@@ -177,54 +175,8 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
     </div>
     <div class="popular-menu-section">
         <h3>오늘의 최고 인기 메뉴는?</h3>
-        <div class="menu-list">
-            
-            <div class="menu-item">
-                <div class="menu-image">이미지</div>
-                <div class="menu-info">
-                    <p><strong>제품명</strong></p>
-                    <p>별 4.5점</p>
-                    <p>카테고리</p>
-                </div>
-            </div>
+        
+        <?php include __DIR__ . '/get_top_menus.php'?>;
 
-            <div class="menu-item">
-                <div class="menu-image">이미지</div>
-                <div class="menu-info">
-                    <p><strong>제품명</strong></p>
-                    <p>별 4.4점</p>
-                    <p>카테고리</p>
-                </div>
-            </div>
-
-            <div class="menu-item">
-                <div class="menu-image">이미지</div>
-                <div class="menu-info">
-                    <p><strong>제품명</strong></p>
-                    <p>별 4.3점</p>
-                    <p>카테고리</p>
-                </div>
-            </div>
-
-            <div class="menu-item">
-                <div class="menu-image">이미지</div>
-                <div class="menu-info">
-                    <p><strong>제품명</strong></p>
-                    <p>별 4.2점</p>
-                    <p>카테고리</p>
-                </div>
-            </div>
-
-            <div class="menu-item">
-                <div class="menu-image">이미지</div>
-                <div class="menu-info">
-                    <p><strong>제품명</strong></p>
-                    <p>별 4.1점</p>
-                    <p>카테고리</p>
-                </div>
-            </div>
-
-        </div>
-    </div>
     </body>
 </html>
