@@ -107,7 +107,7 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
         </header>
 
     <h2>오늘 뭐먹지?</h2>
-    <form method="POST" action="analysis_result.php">
+    <form method="POST" action="analysis_filter.php">
         <label for="age">찾을 연령대:</label><br>
         <select name="age" id="age" required>
             <option value="">선택</option>

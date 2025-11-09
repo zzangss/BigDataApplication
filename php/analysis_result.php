@@ -1,8 +1,15 @@
 <?php
-// PHP 변수는 파일 최상단에 그대로 둡니다.
-$age = $_POST['age'] ?? '미선택';
-$weather = $_POST['weather'] ?? '미선택';
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+// 세션에 저장된 필터값이 있으면 우선 사용, 없으면 POST 값 사용
+$age     = $_SESSION['filters']['age']     ?? ($_POST['age'] ?? '');
+$weather = $_SESSION['filters']['weather'] ?? ($_POST['weather'] ?? '');
+
+// (선택) 안전하게 기본값
+if ($age === '')     { $age = '20대'; }     // 필요 시 기본 연령대
+if ($weather === '') { $weather = '맑음'; } // 필요 시 기본 날씨
 ?>
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -135,7 +142,7 @@ $weather = $_POST['weather'] ?? '미선택';
 
     <h2>오늘 이거 먹으면 맛있겠다!</h2>
     
-    <form class="search-form" method="POST" action="analysis_result.php">
+    <form class="search-form" method="POST" action="analysis_filter.php">
         <label for="age">연령대:</label>
         <select name="age" id="age" required>
             <option value="">선택</option>
@@ -156,36 +163,23 @@ $weather = $_POST['weather'] ?? '미선택';
     
         <button type="submit">다시 분석하기</button>
     </form>
+
+    <!-- 표 시작 -->
+
     <div class="container">
         <div class="section">
-            <h3>오늘의 메뉴 TOP 10 (맛 기준)</h3>
-            <table>
-                <tr><th>순위</th><th>메뉴명</th><th>평균 별점</th></tr>
-                <tr><td>1</td><td>마라탕</td><td>4.9</td></tr>
-                <tr><td>2</td><td>파스타</td><td>4.8</td></tr>
-                <tr><td>3</td><td>초밥</td><td>4.7</td></tr>
-            </table>
+        <?php include __DIR__ . '/get_my_menus.php'; ?>
         </div>
 
         <div class="section">
-            <h3>카테고리별 “맛” 선호도</h3>
-            <table>
-                <tr><th>카테고리</th><th>평균 별점</th><th>리뷰 수</th></tr>
-                <tr><td>한식</td><td>4.2</td><td>50</td></tr>
-                <tr><td>중식</td><td>4.8</td><td>35</td></tr>
-            </table>
+        <?php include __DIR__ . '/get_my_category.php'; ?>
         </div>
 
         <div class="section">
-            <h3>연령/카테고리별 리뷰 통계</h3>
-            <table>
-                <tr><th>연령대</th><th>카테고리</th><th>리뷰 수</th></tr>
-                <tr><td>10대</td><td>한식</td><td>20</td></tr>
-                <tr><td>10대</td><td>중식</td><td>30</td></tr>
-                <tr><td>20대</td><td>한식</td><td>80</td></tr>
-            </table>
+        <?php include __DIR__ . '/get_review_analysis.php'; ?>
         </div>
     </div> 
 
 </body>
 </html>
+
