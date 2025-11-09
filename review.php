@@ -66,7 +66,6 @@ session_start(); // 1. 세션 시작
             font-weight: bold; 
         }
         
-        /* --- ▼ [수정/추가] 폼 요소 스타일 ▼ --- */
         form input[type="text"],
         form input[type="number"],
         form textarea,
@@ -82,20 +81,17 @@ session_start(); // 1. 세션 시작
         form input[type="number"] { width: 100px; } /* 별점 입력창은 작게 */
         form textarea { height: 150px; resize: vertical; } /* 리뷰 내용 높이 증가 */
         
-        /* [추가] 파일 입력창은 브라우저 기본 스타일 사용 방지 */
         form input[type="file"] {
             padding: 10px;
             background-color: #f9f9f9;
         }
         
-        /* [추가] textarea 라벨 상단 정렬 */
         .textarea-group {
             align-items: flex-start; /* 라벨을 위로 붙임 */
         }
         .textarea-group label {
             padding-top: 8px; /* 라벨 텍스트 위치 살짝 내림 */
         }
-        /* --- ▲ [수정/추가] 끝 ▲ --- */
 
         form button {
             display: block; 
@@ -135,11 +131,6 @@ session_start(); // 1. 세션 시작
             <input type="number" id="rating" name="rating" min="1" max="5">
         </div>
 
-        <div>
-            <label for="image">이미지</label>
-            <input type="file" id="image" name="review_image" accept="image/*">
-        </div>
-        
         <div class="textarea-group">
             <label for="comment">리뷰 내용</label>
             <textarea id="comment" name="comment"></textarea>

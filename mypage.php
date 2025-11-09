@@ -12,8 +12,7 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
     <!DOCTYPE html>
     <html lang="ko">
     <head>
-        <meta charset="UTF-R">
-        <title>오늘 뭐먹지? - 접근 불가</title>
+        <meta charset="UTF-R"> <title>오늘 뭐먹지? - 접근 불가</title>
         <style>
             body { font-family: "맑은 고딕", sans-serif; background-color: #fafafa; text-align: center; padding-top: 120px; }
             header { position: fixed; top: 0; left: 0; width: 100%; height: 80px; background-color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); box-sizing: border-box; }
@@ -47,14 +46,15 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
     exit; 
 }
 
+// ▼▼▼ [복원] 1. 처음에 보내주신 원본 주석 ▼▼▼
 // // 4. (로그인 됨) DB에서 [사용자 정보] 가져오기
 // include 'db.php';
 // $user_id = $_SESSION['user_id']; // 세션에 저장된 숫자 user_id
 
 // $sql_user = "SELECT U.username, U.email, P.birth_year, P.gender
-//              FROM Users U
-//              LEFT JOIN UserProfile P ON U.user_id = P.user_id
-//              WHERE U.user_id = ?";
+//               FROM Users U
+//               LEFT JOIN UserProfile P ON U.user_id = P.user_id
+//               WHERE U.user_id = ?";
 
 // $stmt_user = $conn->prepare($sql_user);
 // $stmt_user->bind_param("i", $user_id);
@@ -81,7 +81,7 @@ if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
 // $reviews_result = $stmt_reviews->get_result();
 // // $reviews_result는 HTML에서 사용합니다. (아래 <tbody>에서)
 
-// 6. [추가] 주석 처리한 변수들 대신 가짜(Dummy) 데이터 생성
+// 6. 가짜(Dummy) 데이터 생성
 $user = [
     'username' => '테스트유저',
     'email' => 'test@example.com',
@@ -89,9 +89,10 @@ $user = [
     'gender' => '여'
 ];
 
+// avg_rating은 임의로 추가한 데이터예요 (평균 별점)
 $dummy_reviews = [
-    ['menu_name' => '가짜 마라탕', 'taste_rating' => 5],
-    ['menu_name' => '테스트 파스타', 'taste_rating' => 4]
+    ['id' => 101, 'menu_name' => '가짜 마라탕', 'taste_rating' => 5, 'avg_rating' => 4.2],
+    ['id' => 102, 'menu_name' => '테스트 파스타', 'taste_rating' => 4, 'avg_rating' => 4.5],
 ];
 ?>
 <!DOCTYPE html>
@@ -108,29 +109,39 @@ $dummy_reviews = [
         .nav-links a.active { font-weight: bold; color: #000; }
         .nav-links a.logout-btn { color: #d9534f; } 
         h2 { color: #333; }
-        
-        /* [수정] 폼과 리뷰 섹션의 너비를 통일 */
+    
+        .container {
+            width: 90%;
+            max-width: 800px; 
+            margin: 0 auto; 
+            text-align: left;
+        }
+
         .content-box {
-            display: inline-block;
-            width: 100%;
-            max-width: 600px; /* 최대 너비 */
-            box-sizing: border-box; /* 패딩 포함 */
+            width: 100%; 
+            box-sizing: border-box; 
             background: white;
             padding: 30px;
             border-radius: 12px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             text-align: left;
         }
+
         form div { margin-bottom: 15px; display: flex; align-items: center; }
-        form label { width: 100px; font-weight: bold; }
-        form input, form span { padding: 8px; font-size: 15px; width: 200px; }
+        form label { width: 100px; font-weight: bold; flex-shrink: 0; }
+        form input, form span { padding: 8px; font-size: 15px; flex-grow: 1; }
         form input { border: 1px solid #ccc; border-radius: 5px; }
         form button { display: block; width: 100%; margin-top: 20px; padding: 10px; font-size: 16px; background-color: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; }
         form button:hover { background-color: #45a049; }
 
-        /* --- ▼ [추가] '내가 남긴 리뷰' 테이블 스타일 ▼ --- */
+        
+        .radio-group { display: flex; align-items: center; }
+        .radio-group label { width: auto; font-weight: normal; margin-left: 5px; margin-right: 20px; }
+        .radio-group input[type="radio"] { width: auto; margin: 0; }
+        
+
         .review-section {
-            margin-top: 40px; /* 폼과의 간격 */
+            margin-top: 40px; 
         }
         .review-section h3 {
             text-align: center;
@@ -139,7 +150,7 @@ $dummy_reviews = [
         }
         .review-table {
             width: 100%;
-            border-collapse: collapse; /* 테이블 선 합치기 */
+            border-collapse: collapse; 
         }
         .review-table th, .review-table td {
             border: 1px solid #ddd;
@@ -148,6 +159,18 @@ $dummy_reviews = [
         }
         .review-table th {
             background-color: #f2f2f2;
+        }
+        .delete-btn {
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .delete-btn:hover {
+            background-color: #c9302c;
         }
     </style>
 </head>
@@ -162,79 +185,78 @@ $dummy_reviews = [
         </nav>
     </header>
 
-    <h2>마이페이지</h2>
-    
-    <form class="content-box" method="post" action="mypage_update.php">
-        <div>
-            <label>아이디</label>
-            <span><?php echo htmlspecialchars($user['username']); ?></span>
-        </div>
-        <div>
-            <label for="pw">비밀번호</label>
-            <input type="password" id="pw" name="password" placeholder="새 비밀번호 (선택)">
-        </div>
-        <div>
-            <label for="email">이메일</label>
-            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>">
-        </div>
-        <div>
-            <label for="birth_year">출생연도</label>
-            <input type="number" id="birth_year" name="birth_year" value="<?php echo htmlspecialchars($user['birth_year']); ?>">
-        </div>
-        <div>
-            <label for="gender">성별</label>
-            <div class="radio-group">
+    <div class="container">
+        <h2>마이페이지</h2>
+        
+        <form class="content-box" method="post" action="mypage_update.php">
+            <h3>회원 정보 수정</h3>
+            <div>
+                <label>아이디</label>
+                <span><?php echo htmlspecialchars($user['username']); ?></span>
+            </div>
+            <div>
+                <label for="pw">비밀번호</label>
+                <input type="password" id="pw" name="password" placeholder="새 비밀번호 (선택)">
+            </div>
+            <div>
+                <label for="email">이메일</label>
+                <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($user['email']); ?>">
+            </div>
+            <div>
+                <label for="birth_year">출생연도</label>
+                <input type="number" id="birth_year" name="birth_year" value="<?php echo htmlspecialchars($user['birth_year']); ?>">
+            </div>
+            <div>
+                <label for="gender">성별</label>
+                <div class="radio-group">
                     <input type="radio" id="gender_f" name="gender" value="여" <?php echo ($user['gender'] == '여') ? 'checked' : ''; ?>>
                     <label for="gender_f">여</label>
+                    <div></div>
                     <input type="radio" id="gender_m" name="gender" value="남" <?php echo ($user['gender'] == '남') ? 'checked' : ''; ?>>
                     <label for="gender_m">남</label>
+                </div>
             </div>
-        </div>
-        
-        <button type="submit">수정하기</button>
-    </form>
-    <div class="content-box review-section">
-        <h3>내가 남긴 리뷰</h3>
-        <table class="review-table">
-            <thead>
-                <tr>
-                    <th>메뉴명</th>
-                    <th>별점</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                // if ($reviews_result->num_rows > 0) {
-                //     // DB에서 가져온 데이터로 행(row)을 반복 생성
-                //     while($review = $reviews_result->fetch_assoc()) {
-                //         echo "<tr>";
-                //         echo "<td>" . htmlspecialchars($review['menu_name']) . "</td>";
-                //         echo "<td>" . htmlspecialchars($review['taste_rating']) . "점</td>";
-                //         echo "</tr>";
-                //     }
-                // } else {
-                //     // 리뷰가 없는 경우
-                //     echo '<tr><td colspan="2">아직 남기신 리뷰가 없습니다.</td></tr>';
-                // }
-                
-                // // 사용한 DB 리소스 모두 닫기
-                // $stmt_reviews->close();
-                // $conn->close();
+            
+            <button type="submit">수정하기</button>
+        </form>
 
-                // 가짜(Dummy) 데이터로 대체
-                if (count($dummy_reviews) > 0) {
-                    foreach ($dummy_reviews as $review) {
-                        echo "<tr>";
-                        echo "<td>" . htmlspecialchars($review['menu_name']) . "</td>";
-                        echo "<td>" . htmlspecialchars($review['taste_rating']) . "점</td>";
-                        echo "</tr>";
-                    }
-                } else {
-                    echo '<tr><td colspan="2">아직 남기신 리뷰가 없습니다.</td></tr>';
-                }
-             ?>
-            </tbody>
-        </table>
-    </div>
-    </body>
+        <div class="content-box review-section">
+            <h3>내가 남긴 리뷰</h3>
+            <table class="review-table">
+                <thead>
+                    <tr>
+                        <th>메뉴명</th>
+                        <th>내 별점</th>
+                        <th>평균 별점</th>
+                        <th>관리</th>
+                        </tr>
+                </thead>
+                <tbody>
+                    <?php
+
+                        // 가짜(Dummy) 데이터로 대체
+                        if (count($dummy_reviews) > 0) {
+                            foreach ($dummy_reviews as $review) {
+                                echo "<tr>";
+                                echo "<td>" . htmlspecialchars($review['menu_name']) . "</td>";
+                                echo "<td>" . htmlspecialchars($review['taste_rating']) . "점</td>";
+                                
+                                echo "<td>" . htmlspecialchars($review['avg_rating']) . "점</td>";
+                                echo '<td>';
+                                echo '    <input type="hidden" name="review_id" value="' . $review['id'] . '">';
+                                echo '    <button type="submit" class="delete-btn">삭제</button>';
+                                echo '</form>';
+                                echo '</td>';
+                                
+                                echo "</tr>";
+                            }
+                        } else {
+                            echo '<tr><td colspan="4">아직 남기신 리뷰가 없습니다.</td></tr>';
+                        }
+                    ?>
+                </tbody>
+            </table>
+        </div>
+
+    </div> </body>
 </html>
