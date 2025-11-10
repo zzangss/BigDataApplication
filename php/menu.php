@@ -41,8 +41,13 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
         .nav-links a:hover { color: #000; }
         .nav-links a.logout-btn { color: #d9534f; }
         .nav-links a.login-btn { color: #4CAF50; font-weight: bold; } /* 로그인 버튼 */
-        .nav-links a.active { font-weight: bold; color: #000; } /* '내맛보기' 활성화 */
+        .nav-links a.active { font-weight: bold; color: #000; }
         /* --- 상단바 스타일 끝 --- */
+
+        a.review-link-wrapper {
+        text-decoration: none; /* 밑줄 제거 */
+        color: inherit; /* 부모 요소의 글자색 상속 (검은색) */
+    }
         .container {
             width: 90%;
             max-width: 900px;
@@ -111,12 +116,10 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
             font-size: 20px;
             color: #000;
         }
-        .review-info .stars {
-            font-size: 24px;
-            color: #FFD700;
-        }
-        .review-info .stars .empty {
-            color: #ccc;
+        .rating-score {
+            font-size: 18px;  
+            font-weight: bold;
+            color: #333;      
         }
     </style>
 </head>
@@ -138,7 +141,7 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
         </nav>
     </header>
     <div class="container">
-
+        <h2>메뉴 리뷰</h2>
         <div class="filter-bar">
             <div>
                 <label for="category">카테고리:</label>
@@ -146,14 +149,9 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
                     <option value="전체">전체</option>
                     <option value="한식">한식</option>
                     <option value="중식">중식</option>
-                    <option value="돈까스, 회">돈까스, 회</option>
                     <option value="양식">양식</option>
                     <option value="분식">분식</option>
-                    <option value="패스트푸드">패스트푸드</option>
                     <option value="디저트">디저트</option>
-                    <option value="찜, 탕">찜, 탕</option>
-                    <option value="아시안">아시안</option>
-                    <option value="고기">고기</option>
                 </select>
             </div>
             
@@ -164,26 +162,24 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
             <?php endif; ?>
 
         </div>
+        <a href="review_detail.php?id=101" class="review-link-wrapper">
         <div class="review-list-item">
             <div class="review-image">이미지</div>
             <div class="review-info">
                 <h3>마라로제떡볶이</h3>
-                <div class="stars">
-                    <span>★</span><span>★</span><span>★</span><span>★</span><span class="empty">★</span>
-                </div>
+                <div class="rating-score">⭐ 4.0점</div>
             </div>
         </div>
-        
+        </a>
+        <a href="review_detail.php?id=102" class="review-link-wrapper">
         <div class="review-list-item">
             <div class="review-image">이미지</div>
             <div class="review-info">
                 <h3>라구 파스타</h3>
-                <div class="stars">
-                    <span>★</span><span>★</span><span>★</span><span class="empty">★</span><span class="empty">★</span>
-                </div>
+                <div class="rating-score">⭐ 4.5점</div>
             </div>
         </div>
-        
-        </div>
+        </a>
+    </div>
     </body>
 </html>

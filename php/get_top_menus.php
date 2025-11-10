@@ -24,7 +24,7 @@ if ($res -> num_rows > 0){
         $rating    = htmlspecialchars($row['rating'] ?? '', ENT_QUOTES);
         $category  = htmlspecialchars($row['category_name'] ?? '', ENT_QUOTES);
         $image_rel = htmlspecialchars($row['food_image_url'] ?? '', ENT_QUOTES);
-        $img_src = '/how2React/BigDataApplication/' . ltrim($image_rel, '/');
+        $img_src = '/team13/' . ltrim($image_rel, '/');
 
         echo '
       <div class="menu-item">
