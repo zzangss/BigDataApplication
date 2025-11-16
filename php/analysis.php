@@ -122,7 +122,6 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
             <option value="">선택</option>
             <option value="맑음">맑음</option>
             <option value="비">비</option>
-            <option value="눈">눈</option>
             <option value="흐림">흐림</option>
         </select><br><br>
 
