@@ -1,174 +1,155 @@
 <?php
-session_start(); // 1. 세션 시작
-
-// 로그인 상태 확인
+session_start();
 $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+// [수정] 현재 로그인한 유저 ID (로그인 안 했으면 0)
+$current_user_id = $_SESSION['user_id'] ?? 0; 
 
-//임시로그인 (테스트용)
-$_SESSION['user_id'] = 1; 
-$_SESSION['username'] = 'testuser';
-$is_logged_in = true; 
+// 1. URL에서 menu_id 가져오기 (필수!)
+$menu_id = $_GET['menu_id'] ?? 0;
+if (empty($menu_id)) {
+    die("오류: 메뉴 ID가 없습니다.");
+}
 
+require_once __DIR__ . '/db.php';
 
-// DB 로직 대신 임시 $review 데이터를 생성합니다.
-$review = [
-    'review_id' => 101,
-    'menu_name' => '마라로제떡볶이',
-    'taste_rating' => 4.0,
-    'username' => 'testuser',
-    'created_at' => '2025-10-25 14:30:00',
-    'content' => "여기 정말 맛있네요.\n국물 맛이 아주 깊어요.\n다음에 또 올 거예요!",
-    'user_id' => 1 // 이 리뷰를 작성한 사용자의 ID (1번 = testuser)
-];
+// 2. [쿼리 1] 메뉴 정보 가져오기 (페이지 상단 표시용)
+$sql_menu = "SELECT menu_name, food_image_url FROM Menus WHERE menu_id = ?";
+$stmt_menu = $conn->prepare($sql_menu);
+$stmt_menu->bind_param("i", $menu_id);
+$stmt_menu->execute();
+$menu_result = $stmt_menu->get_result();
 
-// 댓글 목록을 위한 가짜(Dummy) 데이터 
-$dummy_comments = [
-    ['id' => 1, 'username' => 'anotherUser', 'created_at' => '2025-10-25 15:00:00'],
-];
+if ($menu_result->num_rows === 0) {
+    die("오류: 해당 메뉴를 찾을 수 없습니다.");
+}
+$menu = $menu_result->fetch_assoc();
+$stmt_menu->close();
+
+// 3. [쿼리 2] 해당 메뉴의 '모든' 리뷰 가져오기 (review_id 추가)
+$sql_reviews = "SELECT 
+                    R.review_id, 
+                    R.taste_rating, 
+                    R.content, 
+                    R.created_at, 
+                    U.username,
+                    U.user_id -- [수정] 댓글 작성자와 비교하기 위해 리뷰 작성자 ID도 가져옴
+                FROM Reviews AS R
+                JOIN Users AS U ON R.user_id = U.user_id
+                WHERE R.menu_id = ?
+                ORDER BY R.created_at DESC"; // 최신순 정렬
+
+$stmt_reviews = $conn->prepare($sql_reviews);
+$stmt_reviews->bind_param("i", $menu_id);
+$stmt_reviews->execute();
+$reviews_result = $stmt_reviews->get_result();
+
+// 4. [쿼리 3] 이 메뉴에 달린 '모든 댓글'을 한 번에 가져오기
+$sql_comments = "SELECT 
+                    C.comment_id, 
+                    C.review_id, 
+                    C.content, 
+                    C.created_at, 
+                    U.username,
+                    U.user_id -- [수정] 댓글 삭제 버튼 표시에 필요
+                 FROM Comments AS C
+                 JOIN Users AS U ON C.user_id = U.user_id
+                 JOIN Reviews AS R ON C.review_id = R.review_id
+                 WHERE R.menu_id = ?
+                 ORDER BY C.created_at ASC"; // 오래된 순서
+
+$stmt_comments = $conn->prepare($sql_comments);
+$stmt_comments->bind_param("i", $menu_id);
+$stmt_comments->execute();
+$comments_result = $stmt_comments->get_result();
+
+// [신규] 댓글을 review_id 기준으로 재정렬 (PHP에서 처리)
+$comments_by_review = [];
+if ($comments_result->num_rows > 0) {
+    while ($comment = $comments_result->fetch_assoc()) {
+        $comments_by_review[$comment['review_id']][] = $comment;
+    }
+}
+$stmt_comments->close();
+
 ?>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>오늘 뭐먹지? - 리뷰 상세</title>
+    <title><?php echo htmlspecialchars($menu['menu_name']); ?> - 리뷰</title>
     <style>
-        body {
-            font-family: "맑은 고딕", sans-serif;
-            background-color: #fafafa;
-            text-align: center;
-            padding-top: 120px;
-            padding-bottom: 40px;
-        }
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 80px;
-            background-color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 40px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            box-sizing: border-box;
-        }
+        /* (헤더 스타일 등은 menu.php와 동일) */
+        body { font-family: "맑은 고딕", sans-serif; background-color: #fafafa; text-align: center; padding-top: 120px; padding-bottom: 40px; }
+        header { position: fixed; top: 0; left: 0; width: 100%; height: 80px; background-color: white; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); box-sizing: border-box; }
         .logo { font-size: 24px; font-weight: bold; color: #333; text-decoration: none; }
         .nav-links a { margin-left: 25px; font-size: 16px; color: #555; text-decoration: underline; }
         .nav-links a:hover { color: #000; }
         .nav-links a.logout-btn { color: #d9534f; }
-        .nav-links a.login-btn { color: #4CAF50; font-weight: bold; } 
-        .nav-links a.active { font-weight: bold; color: #000; }
+        .nav-links a.login-btn { color: #4CAF50; font-weight: bold; }
 
-        .container {
-            width: 90%;
-            max-width: 900px; /* 너비 통일 */
-            margin: 0 auto; /* 중앙 정렬 */
-            text-align: left;
-        }
-
-        .content-box {
-            width: 100%; 
-            box-sizing: border-box; 
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            text-align: left;
-        }
-        .content-box h2 {
-            margin-top: 0;
-            font-size: 28px;
-        }
-        .content-box .rating-score {
-            font-size: 22px;  
-            font-weight: bold;
-            color: #333;       
-            margin-bottom: 20px; 
-        }
+        .container { width: 90%; max-width: 800px; margin: 0 auto; text-align: left; }
         
-        .content-box .meta-info {
-            font-size: 16px;
-            color: #777;
-            margin-bottom: 25px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 20px;
-        }
-        .content-box .text-content {
-            font-size: 1.1em;
-            line-height: 1.7;
-            min-height: 150px; 
-            color: #333; /* 회색 글씨 방지 */
-        }
-        .comment-section {
-            margin-top: 40px; /* 리뷰 본문과의 간격 */
-        }
-        .comment-section h3 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 20px;
-        }
-        .comment-form textarea {
-            width: 100%;
-            min-height: 80px;
-            padding: 10px;
-            font-size: 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box; 
-            margin-bottom: 10px;
-            font-family: "맑은 고딕", sans-serif; 
-        }
-        .comment-form button {
-            background-color: #4CAF50; 
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            float: right; 
-            font-size: 15px;
-            font-weight: bold;
-        }
-        .comment-form button:hover {
-            background-color: #45a049;
-        }
+        .menu-header { display: flex; align-items: center; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .menu-header img { width: 150px; height: 150px; object-fit: cover; border-radius: 8px; margin-right: 20px; }
+        .menu-header h2 { margin: 0; font-size: 28px; }
 
-        /* 댓글 목록 스타일 */
-        .comment-list {
-            margin-top: 70px; /* 댓글 폼(float)과의 간격 확보 */
-            clear: both; /* float 해제 */
-            border-top: 2px solid #f0f0f0; /* 폼과 목록 구분선 */
-            padding-top: 10px;
-        }
-        .comment-item {
-            padding: 15px 0;
-            border-bottom: 1px solid #eee; /* 댓글 구분선 */
-        }
-        .comment-item:last-child {
-            border-bottom: none; /* 마지막 댓글은 선 없음 */
-        }
-        .comment-header {
+        .review-list { list-style: none; padding: 0; }
+        .review-list li { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .review-header strong { font-size: 18px; }
+        .review-header span { font-size: 16px; color: #E9A426; } /* 별점 */
+        .review-body { color: #333; line-height: 1.6; margin-bottom: 10px; }
+        .review-footer { font-size: 13px; color: #888; text-align: right; }
+        
+        .comments-section { background-color: #f9f9f9; border-top: 1px solid #eee; margin-top: 20px; padding: 15px; border-radius: 0 0 8px 8px; }
+        .comments-section h4 { margin-top: 0; margin-bottom: 10px; font-size: 15px; }
+        .comment-list { list-style: none; padding: 0; margin: 0 0 15px 0; }
+        .comment-list li {
+            background-color: #fff; padding: 10px; border: 1px solid #eee; border-radius: 5px; margin-bottom: 8px; font-size: 14px;
+            /* [수정] 삭제 버튼을 위한 flex */
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
+            align-items: flex-start;
         }
-        .comment-author {
+        .comment-content { flex-grow: 1; } /* [신규] 댓글 내용 영역 */
+        .comment-list strong { font-size: 14px; color: #000; margin-right: 8px; }
+        .comment-list span { font-size: 12px; color: #999; } /* 날짜는 이제 float:right 아님 */
+        .comment-list p { margin: 5px 0 0 0; color: #333; }
+        
+        /* [신규] 댓글 삭제 버튼 스타일 */
+        .comment-delete-form {
+            margin: 0;
+            padding: 0;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+        .comment-delete-btn {
+            background: #ddd;
+            color: #777;
+            border: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
             font-weight: bold;
-            font-size: 16px;
-            color: #000;
+            font-size: 12px;
+            line-height: 25px;
+            text-align: center;
         }
-        .comment-date {
-            font-size: 14px;
-            color: #888;
-        }
-        .comment-content {
-            font-size: 15px;
-            color: #333;
-            line-height: 1.6;
-        }
+        .comment-delete-btn:hover { background: #d9534f; color: white; }
+
+        /* 댓글 폼 스타일 (각 리뷰 내부용) */
+        .comment-form { display: flex; gap: 10px; }
+        .comment-form textarea { width: 100%; flex-grow: 1; height: 40px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; resize: vertical; font-size: 14px; }
+        .comment-form button { display: inline-block; margin-top: 0; padding: 10px 15px; font-size: 14px; background-color: #555; color: white; border: none; border-radius: 8px; cursor: pointer; flex-shrink: 0; }
+        .comment-form button:hover { background-color: #333; }
+        .comment-form button:disabled { background-color: #aaa; }
+        
+        /* (메시지 스타일) */
+        .message { text-align: center; font-weight: bold; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+        .error { color: #d9534f; background-color: #f2dede; }
+        .success { color: #4CAF50; background-color: #dff0d8; }
+
     </style>
 </head>
 <body>
@@ -189,52 +170,99 @@ $dummy_comments = [
     </header>
 
     <div class="container">
-        <div class="content-box">
-            <h2><?php echo htmlspecialchars($review['menu_name']); ?></h2>
-            <div class="rating-score">⭐ <?php echo htmlspecialchars($review['taste_rating']); ?>점</div>
+        <!-- 1. 메뉴 정보 (DB에서 불러옴) -->
+        <div class="menu-header">
+            <img src="/team13/<?php echo ltrim(htmlspecialchars($menu['food_image_url']), '/'); ?>" alt="<?php echo htmlspecialchars($menu['menu_name']); ?>">
+            <h2><?php echo htmlspecialchars($menu['menu_name']); ?></h2>
+        </div>
 
-            <div class="meta-info">
-                <div> 작성자: <strong><?php echo htmlspecialchars($review['username']); ?></strong> | 
-                    작성일: <?php echo date("Y-m-d", strtotime($review['created_at'])); ?>
-                </div>
-            </div> <div class="text-content"> <?php echo nl2br(htmlspecialchars($review['content'])); // nl2br: \n을 <br>로 변경 ?>
-            </div>
-            </div>
+        <!-- 댓글 등록/삭제 결과 메시지 -->
+        <?php if (isset($_GET['comment_success'])): ?>
+            <div class="message success"><?php echo htmlspecialchars($_GET['comment_success']); ?></div>
+        <?php elseif (isset($_GET['comment_error'])): ?>
+            <div class="message error"><?php echo htmlspecialchars($_GET['comment_error']); ?></div>
+        <?php endif; ?>
+        <!-- [신규] 삭제 메시지 -->
+        <?php if (isset($_GET['delete_success'])): ?>
+            <div class="message success"><?php echo htmlspecialchars($_GET['delete_success']); ?></div>
+        <?php elseif (isset($_GET['delete_error'])): ?>
+            <div class="message error"><?php echo htmlspecialchars($_GET['delete_error']); ?></div>
+        <?php endif; ?>
 
 
-        <div class="content-box comment-section">
-            
-            <h3>댓글 작성</h3>
-            <form class="comment-form" method="post" action="comment_process.php">
-                <input type="hidden" name="review_id" value="<?php echo $review['review_id']; ?>">
-                
-                <textarea name="comment" placeholder="댓글을 입력하세요..."></textarea>
-                <button type="submit">댓글 등록</button>
-            </form>
-
-            <div class="comment-list">
-                <?php
-                if (count($dummy_comments) > 0) {
-                    foreach ($dummy_comments as $comment) {
-                        ?>
-                        <div class="comment-item">
-                            <div class="comment-header">
-                                <strong class="comment-author"><?php echo htmlspecialchars($comment['username']); ?></strong>
-                                <span class="comment-date"><?php echo date("Y-m-d H:i", strtotime($comment['created_at'])); ?></span>
-                            </div>
-                            <div class="comment-content">
-                                내취향 아님
-                            </div>
+        <!-- 2. 리뷰 목록 (DB에서 불러옴) -->
+        <h3>전체 리뷰</h3>
+        <ul class="review-list">
+            <?php if ($reviews_result->num_rows > 0): ?>
+                <?php while($review = $reviews_result->fetch_assoc()): ?>
+                    <li>
+                        <!-- (리뷰 내용) -->
+                        <div class="review-header">
+                            <strong><?php echo htmlspecialchars($review['username']); ?></strong>
+                            <span>⭐ <?php echo htmlspecialchars($review['taste_rating']); ?>점</span>
                         </div>
-                        <?php
-                    }
-                } else {
-                    echo '<p style="text-align: center; color: #888;">아직 댓글이 없습니다.</p>';
-                }
-                ?>
-            </div>
+                        <div class="review-body">
+                            <p><?php echo nl2br(htmlspecialchars($review['content'])); ?></p>
+                        </div>
+                        <div class="review-footer">
+                            <?php echo htmlspecialchars($review['created_at']); ?>
+                        </div>
 
-        </div>
-        </div>
-    </body>
+                        <!-- 댓글 섹션 -->
+                        <div class="comments-section">
+                            <h4>댓글</h4>
+                            
+                            <!-- 댓글 목록 표시 -->
+                            <ul class="comment-list">
+                                <?php if (isset($comments_by_review[$review['review_id']])): ?>
+                                    <?php foreach ($comments_by_review[$review['review_id']] as $comment): ?>
+                                        <li>
+                                            <!-- [수정] div로 감싸기 -->
+                                            <div class="comment-content">
+                                                <strong><?php echo htmlspecialchars($comment['username']); ?></strong>
+                                                <span><?php echo htmlspecialchars($comment['created_at']); ?></span>
+                                                <p><?php echo nl2br(htmlspecialchars($comment['content'])); ?></p>
+                                            </div>
+
+                                            <!-- [!! 신규 !!] 댓글 삭제 폼 -->
+                                            <?php if ($current_user_id == $comment['user_id']): ?>
+                                                <form class="comment-delete-form" method="POST" action="comment_delete.php" onsubmit="return confirm('이 댓글을 삭제하시겠습니까?');">
+                                                    <input type="hidden" name="comment_id" value="<?php echo $comment['comment_id']; ?>">
+                                                    <input type="hidden" name="menu_id" value="<?php echo $menu_id; ?>"> <!-- 돌아오기용 -->
+                                                    <button type="submit" class="comment-delete-btn" title="댓글 삭제">X</button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </li>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <li style="border:none; background:none; font-size: 13px; color: #888;">댓글이 없습니다.</li>
+                                <?php endif; ?>
+                            </ul>
+
+                            <!-- 댓글 작성 폼 -->
+                            <form class="comment-form" method="POST" action="comment_process.php">
+                                <textarea name="comment_content" placeholder="댓글을 입력하세요..." required <?php echo !$is_logged_in ? 'disabled' : ''; ?>></textarea>
+                                
+                                <input type="hidden" name="review_id" value="<?php echo $review['review_id']; ?>">
+                                <input type="hidden" name="menu_id" value="<?php echo $menu_id; ?>">
+                                
+                                <button type="submit" <?php echo !$is_logged_in ? 'disabled' : ''; ?>>
+                                    <?php echo $is_logged_in ? '등록' : '...'; ?>
+                                </button>
+                            </form>
+                        </div>
+                    </li>
+                <?php endwhile; ?>
+            <?php else: ?>
+                <li><p>작성된 리뷰가 없습니다. 첫 번째 리뷰를 남겨주세요!</p></li>
+            <?php endif; ?>
+        </ul>
+        
+    </div>
+
+</body>
 </html>
+<?php 
+$reviews_result->close();
+$conn->close(); 
+?>

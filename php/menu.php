@@ -1,19 +1,60 @@
 <?php
+// 500 오류 추적을 위해 맨 위에 추가
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start(); // 1. 세션은 항상 시작
 
-// ✅ 임시 로그인 세션 강제 설정 (테스트용)
-// $_SESSION['user_id'] = 'testuser';
-
-// 2. [수정] 로그인 여부를 변수에 저장만 하고, 쫓아내지 않습니다.
+// 2. 로그인 여부를 변수에 저장
 $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
 
+// 3. DB 연결
+require_once __DIR__ . '/db.php';
+
+// 4. 현재 선택된 카테고리 ID 가져오기 (GET 파라미터)
+$current_category_id = $_GET['category_id'] ?? 0;
+
+// 5. 카테고리 목록 불러오기 (필터 링크 생성용)
+$sql_categories = "SELECT category_id, category_name FROM Categories ORDER BY category_id";
+$category_result = $conn->query($sql_categories);
+$categories = $category_result->fetch_all(MYSQLI_ASSOC);
+
+// 6. 메뉴 목록 불러오기 (동적 쿼리)
+$sql_menus = "SELECT M.menu_id, M.menu_name, C.category_name, M.food_image_url 
+              FROM Menus AS M
+              JOIN Categories AS C ON M.category_id = C.category_id";
+
+if (!empty($current_category_id)) {
+    // 특정 카테고리가 선택된 경우
+    $sql_menus .= " WHERE M.category_id = ?";
+}
+
+// '전체'일 경우 최신순, 카테고리 선택 시 이름순
+if (empty($current_category_id)) {
+    // [!!] '전체': 최신순 정렬 (M.created_at -> M.menu_id) [!!]
+    $sql_menus .= " ORDER BY M.menu_id DESC";
+} else {
+    // '카테고리': 이름순 정렬
+    $sql_menus .= " ORDER BY M.menu_name ASC";
+}
+
+$stmt_menus = $conn->prepare($sql_menus);
+
+if (!empty($current_category_id)) {
+    // Prepared Statement에 category_id 바인딩
+    $stmt_menus->bind_param("i", $current_category_id);
+}
+
+$stmt_menus->execute();
+$menu_result = $stmt_menus->get_result();
 
 ?>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>오늘 뭐먹지? - 내맛보기</title>
+    <title>오늘 뭐먹지? - 메뉴리뷰</title>
     <style>
         body {
             font-family: "맑은 고딕", sans-serif;
@@ -40,14 +81,9 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
         .nav-links a { margin-left: 25px; font-size: 16px; color: #555; text-decoration: underline; }
         .nav-links a:hover { color: #000; }
         .nav-links a.logout-btn { color: #d9534f; }
-        .nav-links a.login-btn { color: #4CAF50; font-weight: bold; } /* 로그인 버튼 */
+        .nav-links a.login-btn { color: #4CAF50; font-weight: bold; }
         .nav-links a.active { font-weight: bold; color: #000; }
-        /* --- 상단바 스타일 끝 --- */
 
-        a.review-link-wrapper {
-        text-decoration: none; /* 밑줄 제거 */
-        color: inherit; /* 부모 요소의 글자색 상속 (검은색) */
-    }
         .container {
             width: 90%;
             max-width: 900px;
@@ -55,7 +91,6 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
             text-align: left;
         }
         
-        /* --- 필터 바 --- */
         .filter-bar {
             display: flex;
             justify-content: space-between;
@@ -65,18 +100,33 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
             border-radius: 12px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             margin-bottom: 25px;
+            flex-wrap: wrap;
         }
-        .filter-bar label {
-            font-size: 16px;
-            font-weight: bold;
-            margin-right: 10px;
+        .category-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-        .filter-bar select {
-            padding: 8px;
-            font-size: 15px;
+        .category-nav a {
+            display: inline-block;
+            padding: 8px 15px;
             border: 1px solid #ccc;
-            border-radius: 5px;
+            border-radius: 20px;
+            text-decoration: none;
+            color: #555;
+            transition: all 0.2s;
+            font-size: 15px;
         }
+        .category-nav a:hover {
+            background-color: #eee;
+        }
+        .category-nav a.current {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+            font-weight: bold;
+        }
+
         .review-button {
             padding: 10px 20px;
             font-size: 16px;
@@ -85,41 +135,50 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
             background-color: #4CAF50;
             text-decoration: none;
             border-radius: 8px;
+            flex-shrink: 0;
         }
         .review-button:hover {
             background-color: #45a049;
         }
-        .review-list-item {
+
+        .menu-container {
             display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .menu-item {
+            width: 200px;
             background: white;
+            border: 1px solid #ddd;
             border-radius: 12px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            text-decoration: none;
+            color: #333;
+            transition: transform 0.2s ease;
             overflow: hidden;
         }
-        .review-image {
-            width: 150px;
-            height: 120px;
-            background-color: #f0f0f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #aaa;
-            font-size: 16px;
-            flex-shrink: 0;
+        .menu-item:hover {
+            transform: translateY(-5px);
         }
-        .review-info {
-            padding: 20px;
+        .menu-image img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
         }
-        .review-info h3 {
-            margin: 0 0 10px 0;
-            font-size: 20px;
-            color: #000;
+        .menu-info {
+            padding: 15px;
+            text-align: center;
         }
-        .rating-score {
-            font-size: 18px;  
-            font-weight: bold;
-            color: #333;      
+        .menu-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
+        .menu-info p {
+            margin: 0;
+            font-size: 14px;
+            color: #777;
         }
     </style>
 </head>
@@ -142,44 +201,57 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
     </header>
     <div class="container">
         <h2>메뉴 리뷰</h2>
+        
         <div class="filter-bar">
-            <div>
-                <label for="category">카테고리:</label>
-                <select name="category" id="category">
-                    <option value="전체">전체</option>
-                    <option value="한식">한식</option>
-                    <option value="중식">중식</option>
-                    <option value="양식">양식</option>
-                    <option value="분식">분식</option>
-                    <option value="디저트">디저트</option>
-                </select>
-            </div>
+            <!-- 1. 동적 카테고리 필터 -->
+            <nav class="category-nav">
+                <!-- '전체' 링크 -->
+                <a href="menu.php" class="<?php echo (empty($current_category_id)) ? 'current' : ''; ?>">
+                    전체
+                </a>
+                <!-- DB에서 불러온 카테고리 링크 -->
+                <?php foreach ($categories as $category): ?>
+                    <a href="menu.php?category_id=<?php echo $category['category_id']; ?>" 
+                       class="<?php echo ($current_category_id == $category['category_id']) ? 'current' : ''; ?>">
+                        <?php echo htmlspecialchars($category['category_name']); ?>
+                    </a>
+                <?php endforeach; ?>
+            </nav>
             
-            <?php if ($is_logged_in): // $is_logged_in이 true일 때만 이 버튼이 보입니다. ?>
+            <!-- 2. 리뷰쓰기 버튼 (로그인 시에만) -->
+            <?php if ($is_logged_in): ?>
             <div>
                 <a href="review.php" class="review-button">리뷰쓰기</a>
             </div>
             <?php endif; ?>
+        </div>
+        
+        <!-- 메뉴 그리드 (DB에서 동적 생성) -->
+        <div class="menu-container">
+            <?php if ($menu_result->num_rows > 0): ?>
+                <?php while($menu = $menu_result->fetch_assoc()): ?>
+                    <!-- review_detail.php로 menu_id를 전달하는 링크 -->
+                    <a href="review_detail.php?menu_id=<?php echo $menu['menu_id']; ?>" class="menu-item">
+                        <div class="menu-image">
+                            <img src="/team13/<?php echo ltrim(htmlspecialchars($menu['food_image_url']), '/'); ?>" alt="<?php echo htmlspecialchars($menu['menu_name']); ?>">
+                        </div>
+                        <div class="menu-info">
+                            <h3><?php echo htmlspecialchars($menu['menu_name']); ?></h3>
+                            <p><?php echo htmlspecialchars($menu['category_name']); ?></p>
+                        </div>
+                    </a>
+                <?php endwhile; ?>
+            <?php else: ?>
+                <p>해당 카테고리에 메뉴가 없습니다.</p>
+            <?php endif; ?>
+        </div>
 
-        </div>
-        <a href="review_detail.php?id=101" class="review-link-wrapper">
-        <div class="review-list-item">
-            <div class="review-image">이미지</div>
-            <div class="review-info">
-                <h3>마라로제떡볶이</h3>
-                <div class="rating-score">⭐ 4.0점</div>
-            </div>
-        </div>
-        </a>
-        <a href="review_detail.php?id=102" class="review-link-wrapper">
-        <div class="review-list-item">
-            <div class="review-image">이미지</div>
-            <div class="review-info">
-                <h3>라구 파스타</h3>
-                <div class="rating-score">⭐ 4.5점</div>
-            </div>
-        </div>
-        </a>
     </div>
-    </body>
+</body>
 </html>
+<?php 
+// DB 연결 닫기
+$category_result->close();
+$stmt_menus->close();
+$conn->close(); 
+?>

@@ -176,7 +176,7 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
     <div class="popular-menu-section">
         <h3>오늘의 최고 인기 메뉴는?</h3>
         
-        <?php include __DIR__ . '/get_top_menus.php'?>;
+        <?php include __DIR__ . '/get_top_menus.php'; ?>
 
     </body>
 </html>
