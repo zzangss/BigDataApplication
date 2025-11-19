@@ -170,7 +170,8 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
         <h2>오늘 날씨에 딱!</h2>
         <p>당신을 위한 맞춤 메뉴 추천<br>
            연령대별 최고 인기 메뉴를 지금 바로 확인하세요!</p>
-        
+        <img src="오늘뭐먹지로고.png" alt="오늘 뭐먹지 로고" style="width: 200px; margin: 10px 0;">
+            <br>
         <a href="analysis.php" class="content-button">나의 메뉴 찾기</a>
     </div>
     <div class="popular-menu-section">
