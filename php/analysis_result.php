@@ -157,7 +157,6 @@ if ($weather === '') { $weather = '맑음'; } // 필요 시 기본 날씨
             <option value="">선택</option>
             <option value="맑음" <?= ($weather == '맑음') ? 'selected' : '' ?>>맑음</option>
             <option value="비" <?= ($weather == '비') ? 'selected' : '' ?>>비</option>
-            <option value="눈" <?= ($weather == '눈') ? 'selected' : '' ?>>눈</option>
             <option value="흐림" <?= ($weather == '흐림') ? 'selected' : '' ?>>흐림</option>
         </select>
     
