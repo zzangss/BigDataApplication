@@ -1,6 +1,7 @@
 <!-- 작성자: 윤소진 -->
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
+$is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
 
 // 세션에 저장된 필터값이 있으면 우선 사용, 없으면 POST 값 사용
 $age     = $_SESSION['filters']['age']     ?? ($_POST['age'] ?? '');
@@ -127,6 +128,13 @@ if ($weather === '') { $weather = '맑음'; } // 필요 시 기본 날씨
             text-align: center;
             margin-top: 0;
         }
+        .nav-links a.logout-btn {
+            color: #d9534f; 
+        }
+        .nav-links a.login-btn {
+            color: #4CAF50; /* 초록색 */
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -134,9 +142,15 @@ if ($weather === '') { $weather = '맑음'; } // 필요 시 기본 날씨
     <header>
         <a href="index.php" class="logo">오늘 뭐먹지?</a>
         <nav class="nav-links">
-            <a href="menu.php">메뉴리뷰</a>
-            <a href="analysis.php" class="active">분석하기</a>
-            <a href="mypage.php">마이페이지</a>
+            <?php if ($is_logged_in): ?>
+                <a href="menu.php">메뉴리뷰</a>
+                <a href="analysis.php" class="active">분석하기</a>
+                <a href="mypage.php">마이페이지</a>
+                <a href="logout.php" class="logout-btn">로그아웃</a>
+            <?php else: ?>
+                <a href="menu.php">메뉴리뷰</a>
+                <a href="analysis.php" class="active">분석하기</a>
+                <a href="index.php" class="login-btn">로그인</a> <?php endif; ?>
         </nav>
     </header>
 
