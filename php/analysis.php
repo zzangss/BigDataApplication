@@ -103,7 +103,7 @@ $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
             <?php else: ?>
                 <a href="menu.php">메뉴리뷰</a>
                 <a href="analysis.php" class="active">분석하기</a>
-                <a href="index.php" class="login-btn">로그인</a> <?php endif; ?>
+                <a href="login.php" class="login-btn">로그인</a> <?php endif; ?>
         </nav>
         </header>
 

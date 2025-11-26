@@ -93,9 +93,6 @@ if ($weather === '') { $weather = '맑음'; } // 필요 시 기본 날씨
         .search-form button:hover {
             background-color: #45a049;
         }
-        /* --- [추가] 스타일 끝 --- */
-
-        /* --- 결과 컨테이너 스타일 (변경 없음) --- */
         .container {
             display: flex;
             justify-content: space-around;
@@ -150,7 +147,7 @@ if ($weather === '') { $weather = '맑음'; } // 필요 시 기본 날씨
             <?php else: ?>
                 <a href="menu.php">메뉴리뷰</a>
                 <a href="analysis.php" class="active">분석하기</a>
-                <a href="index.php" class="login-btn">로그인</a> <?php endif; ?>
+                <a href="login.php" class="login-btn">로그인</a> <?php endif; ?>
         </nav>
     </header>
 
