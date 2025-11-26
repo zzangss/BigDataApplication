@@ -1,3 +1,4 @@
+<!-- 작성자: 백소영 -->
 <?php
 // [!!] 500 오류 추적을 위해 맨 위에 추가 [!!]
 ini_set('display_errors', 1);
@@ -5,7 +6,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 // [요구사항 6] 세션 사용
-// (session_start()는 다른 세션 변수를 사용하기 전에 항상 먼저 호출되어야 합니다.)
+// (session_start()는 다른 세션 변수를 사용하기 전에 항상 먼저 호출되어야함.)
 session_start();
 
 // 1. 로그인 상태 확인

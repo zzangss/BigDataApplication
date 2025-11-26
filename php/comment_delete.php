@@ -1,5 +1,6 @@
+<!-- 작성자: 백소영 -->
 <?php
-// 1. 세션 시작 및 로그인 검사 (필수!)
+// 1. 세션 시작 및 로그인 검사
 require_once __DIR__ . '/auth_check.php';
 // $current_user_id 사용 가능
 

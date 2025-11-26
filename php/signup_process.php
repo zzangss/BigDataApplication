@@ -1,3 +1,4 @@
+<!-- 작성자: 백소영 -->
 <?php
 // 1. DB 연결
 require_once __DIR__ . '/db.php';

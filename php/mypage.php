@@ -1,4 +1,5 @@
 <!-- 작성자: 윤소진 -->
+<!-- 작성자: 백소영 -->
  <?php
 // 1. [수정] auth_check.php를 사용하여 세션 시작 및 로그인 여부 검사
 require_once __DIR__ . '/auth_check.php';
