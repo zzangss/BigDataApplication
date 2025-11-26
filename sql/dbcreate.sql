@@ -1,4 +1,5 @@
-/*
+-- 작성자 : 황채원
+/* 
  * dbcreate.sql
  * 데이터베이스 및 모든 테이블을 생성하는 스크립트
  * (과제 요구사항 [2-1] 충족)
@@ -12,7 +13,7 @@
 -- 
 USE team13;
 
-
+/* 필요시 주석 없애서 사용
 -- 2. 테이블 삭제
 -- 스크립트를 반복 실행할 수 있도록 기존 테이블 삭제
 DROP TABLE IF EXISTS Comments;
@@ -23,7 +24,7 @@ DROP TABLE IF EXISTS Menus;
 DROP TABLE IF EXISTS Categories;
 DROP TABLE IF EXISTS WeatherLog;
 DROP TABLE IF EXISTS WeatherConditions;
-
+*/ 
 
 -- 3. 테이블 생성
 
