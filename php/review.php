@@ -1,3 +1,4 @@
+<!-- 작성자: 윤소진 -->
 <?php
 // 1. 로그인 검사 (가장 먼저 실행)
 require_once __DIR__ . '/auth_check.php';

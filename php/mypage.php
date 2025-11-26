@@ -1,4 +1,5 @@
-<?php
+<!-- 작성자: 윤소진 -->
+ <?php
 // 1. [수정] auth_check.php를 사용하여 세션 시작 및 로그인 여부 검사
 require_once __DIR__ . '/auth_check.php';
 // $current_user_id 와 $current_username 변수를 이제 사용할 수 있습니다.

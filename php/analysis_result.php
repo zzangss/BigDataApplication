@@ -1,3 +1,4 @@
+<!-- 작성자: 윤소진 -->
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
@@ -9,7 +10,6 @@ $weather = $_SESSION['filters']['weather'] ?? ($_POST['weather'] ?? '');
 if ($age === '')     { $age = '20대'; }     // 필요 시 기본 연령대
 if ($weather === '') { $weather = '맑음'; } // 필요 시 기본 날씨
 ?>
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
