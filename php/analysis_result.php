@@ -1,4 +1,5 @@
 <!-- 작성자: 윤소진 -->
+<!-- 작성자: 김재이 -->
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 $is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);

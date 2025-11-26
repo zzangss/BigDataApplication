@@ -1,4 +1,5 @@
-<?php
+<!-- 작성자: 김재이 -->
+ <?php
 
 require_once __DIR__ . '/db.php';
   

@@ -1,3 +1,5 @@
+<!-- 작성자: 김재이 -->
+ 
 <?php
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT); // 디버깅용(완료되면 지워도 됨)
 
